@@ -7,14 +7,16 @@ from agent import Agent
 def main():
     """Shows training agent results"""
 
-    env = UnityEnv(Agent())
+    env = UnityEnv()
 
-    env.load_actor("actor.pth")
-    env.load_critic("critic.pth")
-    env.test(100, 1000)
+    agent = Agent(env.action_size, env.state_size)
+    agent.load_actor("actor.pth")
+    agent.load_critic("critic.pth")
 
-    print("Average Score:", env.avg_score)
-    print("Last Score:", env.last_score)
+    env.test(agent, 50, 100)
+
+    print("Average Scores:", env.avg_scores)
+    print("Last Scores:", env.last_scores)
 
 
 if __name__ == "__main__":

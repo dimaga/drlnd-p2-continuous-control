@@ -9,14 +9,25 @@ from agent import Agent
 def main():
     """Trains the agent with an Actor-Critic method"""
 
-    env = UnityEnv(Agent())
 
-    env.train(1000, 1000)
+    env = UnityEnv()
 
-    if env.max_mean_score > 30.0:
-        print("Saving actor.pth and critic.pth with score", env.max_mean_score)
-        env.save_actor("actor.pth")
-        env.save_critic("critic.pth")
+    agent = Agent(env.action_size, env.state_size)
+    env.train(agent, 50, 1000)
+
+    if np.all(env.max_mean_scores > 30.0):
+
+        print(
+            "Saving actor.pth and critic.pth with score",
+            env.max_mean_scores)
+
+        agent.save_actor("actor.pth")
+        agent.save_critic("critic.pth")
+    else:
+
+        print(
+            "Some of the scores are below 30.0, not saved",
+            env.max_mean_scores)
 
     fig = plt.figure()
     fig.add_subplot(111)

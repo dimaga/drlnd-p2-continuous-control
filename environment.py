@@ -1,17 +1,23 @@
 #!python
 """Agent training and testing environment"""
 
-from unityagents import UnityEnvironment
+from abc import ABC, abstractmethod
 import numpy as np
+from unityagents import UnityEnvironment
+
 
 ENV_PATH = "/Applications/Reacher20.app"
 
-class EnvBase:
-    """Base class for environment to unit test its logic"""
 
-    def __init__(self, agent):
-        self.__agent = agent
+class EnvBase(ABC):
+    """Environment logic that does not depend on Unity"""
+
+    def __init__(self, num_agents):
+        self.__num_agents = num_agents
         self.__training_scores = []
+        self.__max_mean_scores = np.zeros((num_agents, ))
+        self.__avg_scores = np.zeros((num_agents, ))
+        self.__last_scores = np.zeros((num_agents, ))
 
 
     @property
@@ -19,7 +25,49 @@ class EnvBase:
         return self.__training_scores
 
 
-    def train(self, max_t, n_episodes):
+    @property
+    def max_mean_scores(self):
+        return self.__max_mean_scores
+
+
+    @property
+    def avg_scores(self):
+        return self.__avg_scores
+
+
+    @property
+    def last_scores(self):
+        return self.__last_scores
+
+
+    @property
+    def num_agents(self):
+        return self.__num_agents
+
+
+    @property
+    @abstractmethod
+    def action_size(self):
+        raise NotImplementedError
+
+
+    @property
+    @abstractmethod
+    def state_size(self):
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def _step(self, actions):
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def _reset(self, train_mode):
+        raise NotImplementedError
+
+
+    def train(self, agent, max_t, n_episodes):
         """
         brain = self.__env.brains[self.__brain_name]
         env_info = self.__env.reset()[self.__brain_name]
@@ -78,50 +126,43 @@ class EnvBase:
         # print('Total score (averaged over agents) this episode: {}'.format(np.mean(scores)))
 
 
-    def test(self, max_t, n_episodes):
-        brain = self.__env.brains[self.__brain_name]
-        env_info = self.__env.reset()[self.__brain_name]
-        num_agents = len(env_info.agents)
-        action_size = brain.vector_action_space_size
-        states = env_info.vector_observations
-        state_size = states.shape[1]
+    def test(self, agent, max_t, n_episodes):
 
-        scores = np.zeros(num_agents)
+        total_scores = []
+        for episode in range(n_episodes):
+            states = self._reset(False)
 
-        while True:
-            actions = self.__agent.act(states)
+            scores = np.array([0.0] * self.num_agents)
 
-            #actions = np.random.randn(num_agents, action_size)  # select an action (for each agent)
-            #actions = np.clip(actions, -1, 1)  # all actions between -1 and 1
+            print("episode", episode)
 
-            env_info = self.__env.step(actions)[self.__brain_name]  # send all actions to tne environment
+            for step in range(max_t):
+                actions = agent.act(states)
 
-            next_states = env_info.vector_observations  # get next state (for each agent)
-            rewards = env_info.rewards  # get reward (for each agent)
-            dones = env_info.local_done  # see if episode finished
-            scores += env_info.rewards  # update the score (for each agent)
+                info = self._step(actions)
+                scores += info.rewards
 
-            #TODO: agent.step(states, actions, rewards, next_states, dones)
+                states = info.vector_observations
 
-            states = next_states  # roll over states to next time step
-            if np.any(dones):  # exit loop if episode finished
-                break
+                episode_finished = np.any(info.local_done)
+                if np.any(episode_finished):
+                    break
 
-        #print('Total score (averaged over agents) this episode: {}'.format(np.mean(scores)))
+            total_scores.append(scores)
+            self.__avg_scores = np.mean(total_scores, axis=1)
+            self.__last_scores = scores
 
 
 class UnityEnv(EnvBase):
-    def __init__(self, agent):
-        super(UnityEnv, self).__init__(agent)
+    def __init__(self):
+        env = UnityEnvironment(file_name=ENV_PATH)
+        brain_name = env.brain_names[0]
+        info = env.reset(train_mode=False)[brain_name]
 
-        self.__env = UnityEnvironment(file_name=ENV_PATH)
-        self.__brain_name = self.__env.brain_names[0]
-        self.__max_mean_score = 0.0
-        self.__avg_score = 0.0
-        self.__last_score = 0.0
+        super(UnityEnv, self).__init__(len(info.agents))
 
-        info = self.__env.reset(train_mode=False)[self.__brain_name]
-        self.__num_agents = len(info.agents)
+        self.__env = env
+        self.__brain_name = brain_name
 
         brain = self.__env.brains[self.__brain_name]
         self.__action_size = brain.vector_action_space_size
@@ -134,27 +175,6 @@ class UnityEnv(EnvBase):
         self.__env.close()
 
 
-    def load_actor(self, file_path):
-        pass # TODO:
-
-
-    def save_actor(self, file_path):
-        pass # TODO:
-
-
-    def load_critic(self, file_path):
-        pass # TODO:
-
-
-    def save_critic(self, file_path):
-        pass # TODO:
-
-
-    @property
-    def num_agents(self):
-        return self.__num_agents
-
-
     @property
     def action_size(self):
         return self.__action_size
@@ -165,24 +185,9 @@ class UnityEnv(EnvBase):
         return self.__state_size
 
 
-    @property
-    def max_mean_score(self):
-        return self.__max_mean_score
-
-
-    @property
-    def avg_score(self):
-        return self.__avg_score
-
-
-    @property
-    def last_score(self):
-        return self.__last_score
-
-
     def _step(self, actions):
         info = self.__env.step(actions)[self.__brain_name]
-        return info.vector_observations, info.rewards, info.local_done
+        return info
 
 
     def _reset(self, train_mode):
