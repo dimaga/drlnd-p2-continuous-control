@@ -129,12 +129,12 @@ class EnvBase(ABC):
     def test(self, agent, max_t, n_episodes):
 
         total_scores = []
+        scores = np.array([0.0] * self.num_agents)
+
         for episode in range(n_episodes):
             states = self._reset(False)
 
-            scores = np.array([0.0] * self.num_agents)
-
-            print("episode", episode)
+            scores.fill(0)
 
             for step in range(max_t):
                 actions = agent.act(states)
@@ -148,9 +148,10 @@ class EnvBase(ABC):
                 if np.any(episode_finished):
                     break
 
-            total_scores.append(scores)
-            self.__avg_scores = np.mean(total_scores, axis=1)
-            self.__last_scores = scores
+            total_scores.append(scores.copy())
+
+        self.__avg_scores = np.mean(total_scores, axis=0)
+        self.__last_scores = scores
 
 
 class UnityEnv(EnvBase):
