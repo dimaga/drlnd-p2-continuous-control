@@ -4,15 +4,7 @@
 import unittest
 import numpy as np
 from neural_nets import Actor, Critic
-from environment import EnvBase
-
-
-class InfoStub:
-    """A stub that mimics UnityEnvironment info"""
-    # pylint: disable=too-few-public-methods
-    __slots__ = ["vector_observations", "rewards", "local_done"]
-
-    # pylint: disable=attribute-defined-outside-init
+from environment import EnvBase, InfoStub
 
 
 class AgentOnPlane:

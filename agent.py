@@ -7,7 +7,6 @@ from neural_nets import Actor, Critic
 import numpy as np
 from neural_nets import Actor, Critic
 
-#TODO: device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class Agent:
     """Agent"""

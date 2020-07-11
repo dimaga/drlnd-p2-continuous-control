@@ -169,6 +169,14 @@ class EnvBase(ABC):
         self.__last_scores = scores
 
 
+class InfoStub:
+    """A stub that mimics UnityEnvironment info, for unit tests"""
+    # pylint: disable=too-few-public-methods
+    __slots__ = ["vector_observations", "rewards", "local_done"]
+
+    # pylint: disable=attribute-defined-outside-init
+
+
 class UnityEnv(EnvBase):
     """Unity-based environment for training and testing agents"""
 
