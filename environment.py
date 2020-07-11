@@ -25,6 +25,8 @@ class EnvBase(ABC):
         self.__avg_scores = np.zeros((num_agents, ))
         self.__last_scores = np.zeros((num_agents, ))
 
+        self.report_progress = lambda episode, mean_score: None
+
 
     @property
     def total_scores(self):
@@ -150,6 +152,8 @@ class EnvBase(ABC):
             self.__total_scores.append(scores.copy())
 
             mean_scores = np.mean(self.__total_scores[-100:], axis=0)
+            self.report_progress(episode, mean_scores)
+
             if self.__max_mean_scores.mean() < mean_scores.mean():
                 self.__max_mean_scores = mean_scores
 
@@ -174,6 +178,13 @@ class UnityEnv(EnvBase):
         info = env.reset(train_mode=False)[brain_name]
 
         super(UnityEnv, self).__init__(len(info.agents))
+
+        self.report_progress = \
+            lambda episode, mean_scores: print(
+                '\rEpisode {}\tAverage Score: {:.2f} '.format(
+                    episode + 1,
+                    mean_scores.mean()),
+                end="" if (episode + 1) % 100 != 0 else "\n")
 
         self.__env = env
         self.__brain_name = brain_name

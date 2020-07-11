@@ -1,9 +1,11 @@
 #!python
 """Actor and critic neural network implementations"""
 
-class Actor:
-    pass #TODO:
+import torch.nn as nn
+
+class Actor(nn.Module):
+    """Actor (Policy) Model."""
 
 
-class Critic:
-    pass #TODO:
+class Critic(nn.Module):
+    """Critic (Value) Model."""
