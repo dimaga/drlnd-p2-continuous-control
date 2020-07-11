@@ -19,14 +19,14 @@ class AgentOnPlane:
     This is an Agent stub to unit test environment.py"""
 
     def __init__(self, max_velocity):
-        """ Creates an agent to train and test its multiple copies
-        :param max_velocity: maximum velocity of the agent
-        """
+        """Creates an agent to train and test its multiple copies
+        :param max_velocity: maximum velocity of the agent"""
         self.__max_velocity = max_velocity
+        self.steps = []
 
 
     def step(self, states, actions, env_info):
-        """ Performs a training step of the agent
+        """Performs a training step of the agent
 
         :param states: current states of environments:
         states[agent_idx][0] - x position of an agent
@@ -39,16 +39,12 @@ class AgentOnPlane:
         actions[agent_idx][0] - x component of an agent velocity vector
         actions[agent_idx][1] - y component of an agent velocity vector
 
-        :param env_info: InfoStub of agent states after applying actions
-        """
-
-        next_states = env_info.vector_observations
-        rewards = env_info.rewards
-        dones = env_info.local_done
+        :param env_info: InfoStub of agent states after applying actions"""
+        self.steps.append((states, actions, env_info))
 
 
     def act(self, states):
-        """ Returns actions to respond to states. This agent stub
+        """Returns actions to respond to states. This agent stub
         approaches the goal by the nearest trajectory.
 
         :param states: current states of environments:
@@ -60,8 +56,7 @@ class AgentOnPlane:
         :return: actions taken by the agent upon states.
         Format:
         actions[agent_idx][0] - x component of an agent velocity vector
-        actions[agent_idx][1] - y component of an agent velocity vector
-        """
+        actions[agent_idx][1] - y component of an agent velocity vector"""
 
         diffs = states[:, 2:] - states[:, :2]
         dists = np.linalg.norm(diffs, axis=1).reshape(-1, 1)
@@ -73,10 +68,10 @@ class AgentOnPlane:
 
 
 class EnvPlane(EnvBase):
-    """World, consisting of an agent 2D position and a goal position. """
+    """World, consisting of an agent 2D position and a goal position."""
 
     def __init__(self, n_agents, goal_x, goal_y, on_reset_event):
-        """ This is an EnvBase stub implementation to unit test environment.py
+        """This is an EnvBase stub implementation to unit test environment.py
 
         :param n_agents: number of agents, which are trained and tested in
         parallel
@@ -85,8 +80,7 @@ class EnvPlane(EnvBase):
         :param goal_y: y-coordinate of a goal
 
         :param on_reset_event: an event which is called upon every _reset() call
-        to adjust state vector for more diverse unit testing scenarios
-        """
+        to adjust state vector for more diverse unit testing scenarios"""
         super(EnvPlane, self).__init__(n_agents)
 
         self.__goal = np.array([goal_x, goal_y])
@@ -109,7 +103,7 @@ class EnvPlane(EnvBase):
 
 
     def _step(self, actions):
-        """ Apply agent actions to environments to produce new actions, rewards;
+        """Apply agent actions to environments to produce new actions, rewards;
         and estimate which environments are done.
 
         :param actions: actions taken by an agent upon states.
@@ -117,8 +111,7 @@ class EnvPlane(EnvBase):
         actions[agent_idx][0] - x component of an agent velocity vector
         actions[agent_idx][1] - y component of an agent velocity vector
 
-        :return: InfoStub of agent states after applying actions
-        """
+        :return: InfoStub of agent states after applying actions"""
 
         self.__states[:, :2] += actions
 
@@ -137,7 +130,7 @@ class EnvPlane(EnvBase):
 
 
     def _reset(self, train_mode):
-        """ Resets environment to restart an episode
+        """Resets environment to restart an episode
 
         :param train_mode: If true, this is a training mode
 
@@ -145,8 +138,7 @@ class EnvPlane(EnvBase):
         states[agent_idx][0] - x position of an agent
         states[agent_idx][1] - y position of an agent
         states[agent_idx][2] - x position of a goal
-        states[agent_idx][3] - y position of a goal
-        """
+        states[agent_idx][3] - y position of a goal"""
 
         self.train_mode = train_mode
 
@@ -163,6 +155,7 @@ class TestEnvironment(unittest.TestCase):
     def setUp(self):
         """The method is called before any test case"""
         self.__test_episode = 0
+        self.__train_episode = 0
 
 
     def test_environment_test(self):
@@ -178,14 +171,30 @@ class TestEnvironment(unittest.TestCase):
         np.testing.assert_array_almost_equal([-2.0, -2.0, 0.0], env.last_scores)
 
 
-    #def test_environment_train(self):
-    #    env = EnvStub(AgentStub())
-    #    env.train(10, 20)
+    def test_environment_train(self):
+        """Unit test EnvBase.train()"""
+
+        env = EnvPlane(2, 0.0, 5.0, self.__on_reset_train)
+        agent = AgentOnPlane(0.5)
+        env.train(agent, 10, 3)
+
+        self.assertTrue(env.train_mode)
+        self.assertEqual(10 * 3, len(agent.steps))
+
+        self.assertAlmostEqual(0.0, agent.steps[0][0][0][0])
+        self.assertAlmostEqual(0.0, agent.steps[0][0][0][1])
+        self.assertAlmostEqual(0.0, agent.steps[0][0][0][2])
+        self.assertAlmostEqual(5.0, agent.steps[0][0][0][3])
+
+        self.assertAlmostEqual(0.0, agent.steps[0][1][0][0])
+        self.assertAlmostEqual(0.5, agent.steps[0][1][0][1])
+
+        self.assertAlmostEqual(-1.0, agent.steps[0][2].rewards[0])
 
 
     def __on_reset_test(self, env, state):
-        """ Event handler of EnvPlane._reset() calls to generate diverse states
-        for different environments and episodes
+        """Event handler of EnvPlane._reset() calls to generate diverse states
+        for different environments and episodes in test() call
 
         :param env: EnvPlane instance
 
@@ -193,14 +202,20 @@ class TestEnvironment(unittest.TestCase):
         states[agent_idx][0] - x position of an agent
         states[agent_idx][1] - y position of an agent
         states[agent_idx][2] - x position of a goal
-        states[agent_idx][3] - y position of a goal
-        """
+        states[agent_idx][3] - y position of a goal"""
 
         for i in range(env.num_agents):
             state[i, 0] = self.__test_episode + i
             state[i, 1] = 0.0
 
         self.__test_episode += 1
+
+
+    def __on_reset_train(self, *_):
+        """Event handler of EnvPlane._reset() calls to generate diverse states
+        for different environments and episodes in train() call"""
+
+        self.__train_episode += 1
 
 
 if __name__ == '__main__':

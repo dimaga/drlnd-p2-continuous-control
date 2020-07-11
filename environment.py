@@ -13,148 +13,161 @@ class EnvBase(ABC):
     """Environment logic that does not depend on Unity"""
 
     def __init__(self, num_agents):
+        """Create environment for testing and training with
+
+        :param num_agents: Number of copies of the environment for distributed
+        training
+        """
+
         self.__num_agents = num_agents
-        self.__training_scores = []
+        self.__total_scores = []
         self.__max_mean_scores = np.zeros((num_agents, ))
         self.__avg_scores = np.zeros((num_agents, ))
         self.__last_scores = np.zeros((num_agents, ))
 
 
     @property
-    def training_scores(self):
-        return self.__training_scores
+    def total_scores(self):
+        """:return: History of total scores of each environment instance per
+        each episode"""
+        return self.__total_scores
 
 
     @property
     def max_mean_scores(self):
+        """:return: Maximum mean score of 100-episode window per each
+        environment instance"""
         return self.__max_mean_scores
 
 
     @property
     def avg_scores(self):
+        """:return: Average scores of all episodes per each environment
+        instance"""
         return self.__avg_scores
 
 
     @property
     def last_scores(self):
+        """:return: Last episode scores of all episodes per each environment
+        instance"""
         return self.__last_scores
 
 
     @property
     def num_agents(self):
+        """:return: Number of environment instances which are trained and tested
+        in parallel"""
         return self.__num_agents
 
 
     @property
     @abstractmethod
     def action_size(self):
+        """:return: Action vector size"""
         raise NotImplementedError
 
 
     @property
     @abstractmethod
     def state_size(self):
+        """:return: State vector size"""
         raise NotImplementedError
 
 
     @abstractmethod
     def _step(self, actions):
+        """Apply actions to environment instances to update their states. The
+        method must be overloaded by a subclass
+        :param actions: action vectors
+        :return: New state vectors per each environment instance"""
         raise NotImplementedError
 
 
     @abstractmethod
     def _reset(self, train_mode):
+        """Start training or testing in environment instances. The method must
+        be overloaded by a subclass
+        :param train_mode: True if training mode.
+        :return: Initial state vectors per each environment instance"""
         raise NotImplementedError
 
 
     def train(self, agent, max_t, n_episodes):
+        """Train agent by running num_agent environments for n_episodes. The
+        training algorithm will pick the best results over 100-episode window
+        and re-store it in agent.actor_local and agent.critic_local
+        :param agent: Agent, implementing neural networks and training
+        algorithms
+        :param max_t: Maximum number of steps per episode if it is not finished
+        earlier
+        :param n_episodes: Number of episodes for training
         """
-        brain = self.__env.brains[self.__brain_name]
-        env_info = self.__env.reset()[self.__brain_name]
-        num_agents = len(env_info.agents)
-        action_size = brain.vector_action_space_size
-        states = env_info.vector_observations
-        state_size = states.shape[1]
-
-        scores = np.zeros(num_agents)
-
-        scores_deque = deque(maxlen=print_every)
-        scores = []
-        for i_episode in range(1, n_episodes + 1):
-            state = env.reset()
-            agent.reset()
-            score = 0
-            for t in range(max_t):
-                action = agent.act(state)
-                next_state, reward, done, _ = env.step(action)
-                agent.step(state, action, reward, next_state, done)
-                state = next_state
-                score += reward
-                if done:
-                    break
-            scores_deque.append(score)
-            scores.append(score)
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode,
-                                                               np.mean(
-                                                                   scores_deque)),
-                  end="")
-            torch.save(agent.actor_local.state_dict(), 'checkpoint_actor.pth')
-            torch.save(agent.critic_local.state_dict(), 'checkpoint_critic.pth')
-            if i_episode % print_every == 0:
-                print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode,
-                                                                   np.mean(
-                                                                       scores_deque)))
-
-        while True:
-            actions = agent.act(states)
-
-            env_info = self.__env.step(actions)[self.__brain_name]
-
-            next_states = env_info.vector_observations
-            rewards = env_info.rewards
-            dones = env_info.local_done
-            scores += env_info.rewards
-
-            agent.step(states, actions, rewards, next_states, dones)
-
-            states = next_states
-            if np.any(dones):
-                break
-
-        """
-
-        # print('Total score (averaged over agents) this episode: {}'.format(np.mean(scores)))
+        self.__run(True, agent, max_t, n_episodes)
 
 
     def test(self, agent, max_t, n_episodes):
+        """ Test agent by running num_agent environments for n_episodes.
+        :param agent: Agent, implementing neural networks and training
+        algorithms
+        :param max_t: Maximum number of steps per episode if it is not finished
+        earlier
+        :param n_episodes: Number of episodes for training
+        """
+        self.__run(False, agent, max_t, n_episodes)
 
-        total_scores = []
+
+    def __run(self, train_mode, agent, max_t, n_episodes):
+
+        self.__total_scores = []
+        self.__max_mean_scores.fill(0.0)
+
+        actor = None
+        critic = None
+
         scores = np.array([0.0] * self.num_agents)
 
         for episode in range(n_episodes):
-            states = self._reset(False)
+            states = self._reset(train_mode)
 
             scores.fill(0)
 
-            for step in range(max_t):
+            for _ in range(max_t):
                 actions = agent.act(states)
 
                 info = self._step(actions)
-                scores += info.rewards
 
+                if train_mode:
+                    agent.step(states, actions, info)
+
+                scores += info.rewards
                 states = info.vector_observations
 
                 episode_finished = np.any(info.local_done)
                 if np.any(episode_finished):
                     break
 
-            total_scores.append(scores.copy())
+            self.__total_scores.append(scores.copy())
 
-        self.__avg_scores = np.mean(total_scores, axis=0)
+            mean_scores = np.mean(self.__total_scores[-100:], axis=0)
+            if self.__max_mean_scores.mean() < mean_scores.mean():
+                self.__max_mean_scores = mean_scores
+
+                if train_mode:
+                    actor = agent.actor_local.state_dict().copy()
+                    critic = agent.critic_local.state_dict().copy()
+
+        if train_mode and actor is not None and critic is not None:
+            agent.actor_local.load_state_dict(actor)
+            agent.critic_local.load_state_dict(critic)
+
+        self.__avg_scores = np.mean(self.__total_scores, axis=0)
         self.__last_scores = scores
 
 
 class UnityEnv(EnvBase):
+    """Unity-based environment for training and testing agents"""
+
     def __init__(self):
         env = UnityEnvironment(file_name=ENV_PATH)
         brain_name = env.brain_names[0]

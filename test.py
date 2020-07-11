@@ -1,6 +1,7 @@
 #!python
 """Main module to test the agent training results"""
 
+import torch
 from environment import UnityEnv
 from agent import Agent
 
@@ -10,8 +11,8 @@ def main():
     env = UnityEnv()
 
     agent = Agent(env.action_size, env.state_size)
-    agent.load_actor("actor.pth")
-    agent.load_critic("critic.pth")
+    agent.actor_local.load_state_dict(torch.load("actor.pth"))
+    agent.critic_local.load_state_dict(torch.load("critic.pth"))
 
     env.test(agent, 50, 100)
 

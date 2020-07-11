@@ -3,6 +3,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 from environment import UnityEnv
 from agent import Agent
 
@@ -21,8 +22,8 @@ def main():
             "Saving actor.pth and critic.pth with score",
             env.max_mean_scores)
 
-        agent.save_actor("actor.pth")
-        agent.save_critic("critic.pth")
+        torch.save(agent.actor_local.state_dict(), "actor.pth")
+        torch.save(agent.critic_local.state_dict(), "critic.pth")
     else:
 
         print(
@@ -31,7 +32,7 @@ def main():
 
     fig = plt.figure()
     fig.add_subplot(111)
-    plt.plot(np.arange(len(env.training_scores)), env.training_scores)
+    plt.plot(np.arange(len(env.total_scores)), env.total_scores)
     plt.ylabel('Score')
     plt.xlabel('Episode #')
     plt.show()
