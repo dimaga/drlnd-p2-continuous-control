@@ -3,6 +3,7 @@
 
 import unittest
 import numpy as np
+from neural_nets import Actor, Critic
 from environment import EnvBase
 
 
@@ -22,6 +23,8 @@ class AgentOnPlane:
         """Creates an agent to train and test its multiple copies
         :param max_velocity: maximum velocity of the agent"""
         self.__max_velocity = max_velocity
+        self.actor_local = Actor()
+        self.critic_local = Critic()
         self.steps = []
 
 
@@ -190,6 +193,7 @@ class TestEnvironment(unittest.TestCase):
         self.assertAlmostEqual(0.5, agent.steps[0][1][0][1])
 
         self.assertAlmostEqual(-1.0, agent.steps[0][2].rewards[0])
+        self.assertAlmostEqual(1.0, agent.steps[-1][2].rewards[0])
 
 
     def __on_reset_test(self, env, state):
