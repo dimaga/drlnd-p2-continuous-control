@@ -1,25 +1,23 @@
 #!python
 """Reinforcement Learning Agent that will train and act in the environment"""
 
-from replay_buffer import ReplayBuffer
-from neural_nets import Actor, Critic
-
 import numpy as np
+from replay_buffer import ReplayBuffer
 from neural_nets import Actor, Critic
 
 
 class Agent:
     """Agent"""
 
-    def __init__(self, action_size, state_size):
-        self.__action_size = action_size
+    def __init__(self, state_size, action_size):
         self.__state_size = state_size
+        self.__action_size = action_size
 
-        self.actor_local = Actor()
-        self.__actor_target = Actor()
+        self.actor_local = Actor(state_size, action_size, 0)
+        self.__actor_target = Actor(state_size, action_size, 0)
 
-        self.critic_local = Critic()
-        self.__critic_target = Critic()
+        self.critic_local = Critic(state_size, action_size, 0)
+        self.__critic_target = Critic(state_size, action_size, 0)
 
 
     def step(self, states, actions, env_info):

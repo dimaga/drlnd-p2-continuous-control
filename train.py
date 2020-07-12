@@ -4,16 +4,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from environment import UnityEnv
-from agent import Agent
+from env_agent_factory import create_env_agent
 
 def main():
     """Trains the agent with an Actor-Critic method"""
 
+    env, agent = create_env_agent()
 
-    env = UnityEnv()
-
-    agent = Agent(env.action_size, env.state_size)
     env.train(agent, 50, 1000)
 
     if np.all(env.max_mean_scores > 30.0):

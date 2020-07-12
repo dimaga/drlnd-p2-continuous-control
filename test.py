@@ -2,15 +2,13 @@
 """Main module to test the agent training results"""
 
 import torch
-from environment import UnityEnv
-from agent import Agent
+from env_agent_factory import create_env_agent
 
 def main():
     """Shows training agent results"""
 
-    env = UnityEnv()
+    env, agent = create_env_agent()
 
-    agent = Agent(env.action_size, env.state_size)
     agent.actor_local.load_state_dict(torch.load("actor.pth"))
     agent.critic_local.load_state_dict(torch.load("critic.pth"))
 

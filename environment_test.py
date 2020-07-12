@@ -11,12 +11,15 @@ class AgentOnPlane:
     """Agent steps in the direction of the goal at maximum velocity possible.
     This is an Agent stub to unit test environment.py"""
 
-    def __init__(self, max_velocity):
+    def __init__(self, max_velocity, state_size, action_size):
         """Creates an agent to train and test its multiple copies
-        :param max_velocity: maximum velocity of the agent"""
+        :param max_velocity: maximum velocity of the agent
+        :param state_size: dimensionality of the state vector
+        :param action_size: dimensionality of the action vector"""
+
         self.__max_velocity = max_velocity
-        self.actor_local = Actor()
-        self.critic_local = Critic()
+        self.actor_local = Actor(state_size, action_size, 0)
+        self.critic_local = Critic(state_size, action_size, 0)
         self.steps = []
 
 
@@ -157,7 +160,7 @@ class TestEnvironment(unittest.TestCase):
         """Unit test EnvBase.test()"""
 
         env = EnvPlane(3, 5.0, 0.0, self.__on_reset_test)
-        agent = AgentOnPlane(1.0)
+        agent = AgentOnPlane(1.0, env.action_size, env.state_size)
         env.test(agent, 5, 2)
 
         self.assertFalse(env.train_mode)
@@ -170,7 +173,7 @@ class TestEnvironment(unittest.TestCase):
         """Unit test EnvBase.train()"""
 
         env = EnvPlane(2, 0.0, 5.0, self.__on_reset_train)
-        agent = AgentOnPlane(0.5)
+        agent = AgentOnPlane(0.5, env.action_size, env.state_size)
         env.train(agent, 10, 3)
 
         self.assertTrue(env.train_mode)
