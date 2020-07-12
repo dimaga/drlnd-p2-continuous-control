@@ -11,7 +11,7 @@ def main():
 
     env, agent = create_env_agent()
 
-    env.train(agent, 50, 1000)
+    env.train(agent, 100, 5000)
 
     if np.all(env.max_mean_scores > 30.0):
 

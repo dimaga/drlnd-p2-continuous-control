@@ -21,6 +21,7 @@ class AgentOnPlane:
         self.actor_local = Actor(state_size, action_size, 0)
         self.critic_local = Critic(state_size, action_size, 0)
         self.steps = []
+        self.reset_calls = 0
 
 
     def step(self, states, actions, env_info):
@@ -39,6 +40,11 @@ class AgentOnPlane:
 
         :param env_info: InfoStub of agent states after applying actions"""
         self.steps.append((states, actions, env_info))
+
+
+    def reset(self):
+        """The method is called in the beginning of each episode"""
+        self.reset_calls += 1
 
 
     def act(self, states, _):
@@ -178,6 +184,7 @@ class TestEnvironment(unittest.TestCase):
 
         self.assertTrue(env.train_mode)
         self.assertEqual(10 * 3, len(agent.steps))
+        self.assertEqual(3, agent.reset_calls)
 
         self.assertAlmostEqual(0.0, agent.steps[0][0][0][0])
         self.assertAlmostEqual(0.0, agent.steps[0][0][0][1])

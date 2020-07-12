@@ -9,5 +9,5 @@ def create_env_agent():
     """:return: unity_environment, agent"""
 
     env = UnityEnv()
-    agent = Agent(env.state_size, env.action_size)
+    agent = Agent(env.state_size, env.action_size, env.num_agents)
     return env, agent

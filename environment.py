@@ -131,6 +131,7 @@ class EnvBase(ABC):
 
         for episode in range(n_episodes):
             states = self._reset(train_mode)
+            agent.reset()
 
             scores.fill(0)
 
@@ -189,9 +190,9 @@ class UnityEnv(EnvBase):
 
         self.report_progress = \
             lambda episode, mean_scores: print(
-                '\rEpisode {}\tAverage Score: {:.2f} '.format(
+                '\rEpisode {}\tMin Average Score: {:.2f} '.format(
                     episode + 1,
-                    mean_scores.mean()),
+                    mean_scores.min()),
                 end="" if (episode + 1) % 100 != 0 else "\n")
 
         self.__env = env

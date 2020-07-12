@@ -28,6 +28,7 @@ class Actor(nn.Module):
         fc_units = 256
 
         self.seed = torch.manual_seed(seed)
+        self.batch_norm1 = nn.BatchNorm1d(state_size)
         self.fc1 = nn.Linear(state_size, fc_units)
         self.fc2 = nn.Linear(fc_units, action_size)
         self.__reset_parameters()
@@ -38,8 +39,9 @@ class Actor(nn.Module):
 
         # pylint: disable=arguments-differ
 
-        data = F.relu(self.fc1(state))
-        return F.tanh(self.fc2(data))
+        state = self.batch_norm1(state)
+        state = F.relu(self.fc1(state))
+        return F.tanh(self.fc2(state))
 
 
     def __reset_parameters(self):
@@ -65,6 +67,7 @@ class Critic(nn.Module):
         fc3_units = 128
 
         self.seed = torch.manual_seed(seed)
+        self.batch_norm1 = nn.BatchNorm1d(state_size)
         self.fcs1 = nn.Linear(state_size, fcs1_units)
         self.fc2 = nn.Linear(fcs1_units + action_size, fc2_units)
         self.fc3 = nn.Linear(fc2_units, fc3_units)
@@ -78,8 +81,9 @@ class Critic(nn.Module):
 
         # pylint: disable=no-member, arguments-differ
 
-        data = F.leaky_relu(self.fcs1(state))
-        data = torch.cat((data, action), dim=1)
+        state = self.batch_norm1(state)
+        state = F.leaky_relu(self.fcs1(state))
+        data = torch.cat((state, action), dim=1)
         data = F.leaky_relu(self.fc2(data))
         data = F.leaky_relu(self.fc3(data))
         return self.fc4(data)

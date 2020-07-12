@@ -12,7 +12,7 @@ def main():
     agent.actor_local.load_state_dict(torch.load("actor.pth"))
     agent.critic_local.load_state_dict(torch.load("critic.pth"))
 
-    env.test(agent, 50, 100)
+    env.test(agent, 100, 100)
 
     print("Average Scores:", env.avg_scores)
     print("Last Scores:", env.last_scores)

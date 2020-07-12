@@ -15,6 +15,8 @@ class TestNeuralNets(unittest.TestCase):
         actor = Actor(state_size=5, action_size=3, seed=0).to(DEVICE)
 
         state = torch.Tensor([[0.1, 0.5, 1.0, 0.1, 0.5]]).to(DEVICE)
+
+        actor.eval()
         action = actor.forward(state).to(DEVICE)
         self.assertEqual((1, 3), action.size())
 
@@ -31,6 +33,7 @@ class TestNeuralNets(unittest.TestCase):
             [0.0, 1.0, 1.0]
         ]).to(DEVICE)
 
+        actor.eval()
         actions = actor.forward(states).to(DEVICE)
         self.assertEqual((5, 2), actions.size())
 
@@ -42,6 +45,7 @@ class TestNeuralNets(unittest.TestCase):
         state = torch.Tensor([[1.0, 0.1, 0.5]]).to(DEVICE)
         action = torch.Tensor([[0.1, 2.1]]).to(DEVICE)
 
+        critic.eval()
         value = critic.forward(state, action).to(DEVICE)
         self.assertEqual((1, 1), value.size())
 
@@ -60,5 +64,6 @@ class TestNeuralNets(unittest.TestCase):
             [1.0, 0.0, 1.0]
         ]).to(DEVICE)
 
+        critic.eval()
         values = critic.forward(states, actions).to(DEVICE)
         self.assertEqual((2, 1), values.size())

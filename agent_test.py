@@ -14,7 +14,7 @@ class TestAgent(unittest.TestCase):
     def test_agent_act(self):
         """Test how an agent can act"""
 
-        agent = Agent(3, 5)
+        agent = Agent(3, 5, 1)
         states = np.array([[1.0, 2.0, 3.0], [0.3, 2.0, 1.0]])
 
         actions1 = agent.act(states, False)
@@ -36,15 +36,19 @@ class TestAgent(unittest.TestCase):
         action_size = 1
         environments = 20
 
-        agent = Agent(state_size, action_size)
+        agent = Agent(state_size, action_size, environments)
         np.random.seed(0)
 
+        at_least_one_reached = False
         n_episodes = 150
+
         for episode in range(n_episodes):
 
             states = np.random.random((environments, state_size))
 
             at_least_one_reached = False
+
+            agent.reset()
 
             for _ in range(10):
                 train_step = episode < n_episodes - 1
