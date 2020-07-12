@@ -135,7 +135,7 @@ class EnvBase(ABC):
             scores.fill(0)
 
             for _ in range(max_t):
-                actions = agent.act(states)
+                actions = agent.act(states, train_mode)
 
                 info = self._step(actions)
 

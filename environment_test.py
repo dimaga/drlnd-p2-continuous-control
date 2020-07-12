@@ -41,7 +41,7 @@ class AgentOnPlane:
         self.steps.append((states, actions, env_info))
 
 
-    def act(self, states):
+    def act(self, states, _):
         """Returns actions to respond to states. This agent stub
         approaches the goal by the nearest trajectory.
 
