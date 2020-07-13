@@ -21,9 +21,9 @@ class EnvBase(ABC):
 
         self.__num_agents = num_agents
         self.__total_scores = []
-        self.__max_mean_scores = np.zeros((num_agents, ))
-        self.__avg_scores = np.zeros((num_agents, ))
-        self.__last_scores = np.zeros((num_agents, ))
+        self.__max_mean_score = 0.0
+        self.__avg_score = 0.0
+        self.__last_score = 0.0
 
         self.report_progress = lambda episode, mean_score: None
 
@@ -36,24 +36,22 @@ class EnvBase(ABC):
 
 
     @property
-    def max_mean_scores(self):
-        """:return: Maximum mean score of 100-episode window per each
-        environment instance"""
-        return self.__max_mean_scores
+    def max_mean_score(self):
+        """:return: Maximum mean score over 100-episode window over all
+        environments"""
+        return self.__max_mean_score
 
 
     @property
-    def avg_scores(self):
-        """:return: Average scores of all episodes per each environment
-        instance"""
-        return self.__avg_scores
+    def avg_score(self):
+        """:return: Average scores of all episodes over all environments"""
+        return self.__avg_score
 
 
     @property
-    def last_scores(self):
-        """:return: Last episode scores of all episodes per each environment
-        instance"""
-        return self.__last_scores
+    def last_score(self):
+        """:return: Last episode score averaged over all environments"""
+        return self.__last_score
 
 
     @property
@@ -122,7 +120,7 @@ class EnvBase(ABC):
     def __run(self, train_mode, agent, max_t, n_episodes):
 
         self.__total_scores = []
-        self.__max_mean_scores.fill(0.0)
+        self.__max_mean_score = 0.0
 
         actor = None
         critic = None
@@ -150,13 +148,13 @@ class EnvBase(ABC):
                 if np.any(episode_finished):
                     break
 
-            self.__total_scores.append(scores.copy())
+            self.__total_scores.append(scores.mean())
 
-            mean_scores = np.mean(self.__total_scores[-100:], axis=0)
-            self.report_progress(episode, mean_scores)
+            mean_score = np.mean(self.__total_scores[-100:])
+            self.report_progress(episode, mean_score)
 
-            if self.__max_mean_scores.mean() < mean_scores.mean():
-                self.__max_mean_scores = mean_scores
+            if self.__max_mean_score < mean_score:
+                self.__max_mean_score = mean_score
 
                 if train_mode:
                     actor = agent.actor_local.state_dict().copy()
@@ -166,8 +164,8 @@ class EnvBase(ABC):
             agent.actor_local.load_state_dict(actor)
             agent.critic_local.load_state_dict(critic)
 
-        self.__avg_scores = np.mean(self.__total_scores, axis=0)
-        self.__last_scores = scores
+        self.__avg_score = np.mean(self.__total_scores)
+        self.__last_score = scores.mean()
 
 
 class InfoStub:
@@ -189,10 +187,10 @@ class UnityEnv(EnvBase):
         super(UnityEnv, self).__init__(len(info.agents))
 
         self.report_progress = \
-            lambda episode, mean_scores: print(
-                '\rEpisode {}\tMin Average Score: {:.2f} '.format(
+            lambda episode, mean_score: print(
+                '\rEpisode {}\tAverage Score Over All Agents: {:.2f} '.format(
                     episode + 1,
-                    mean_scores.min()),
+                    mean_score),
                 end="" if (episode + 1) % 100 != 0 else "\n")
 
         self.__env = env

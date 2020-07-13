@@ -28,26 +28,30 @@ class Agent:
         :param state_size: state vector dimension
         :param action_size: action vector dimension"""
 
-        self.actor_local = Actor(state_size, action_size, 0)
-        self.__actor_target = Actor(state_size, action_size, 0)
+        random_seed = 5
+
+        self.actor_local = Actor(state_size, action_size, random_seed)
+        self.__actor_target = Actor(state_size, action_size, random_seed+1)
 
         self.__actor_optimizer = optim.Adam(
             self.actor_local.parameters(),
             lr=LR_ACTOR)
 
 
-        self.critic_local = Critic(state_size, action_size, 0)
-        self.__critic_target = Critic(state_size, action_size, 0)
+        self.critic_local = Critic(state_size, action_size, random_seed+2)
+        self.__critic_target = Critic(state_size, action_size, random_seed+3)
 
         self.__critic_optimizer = optim.Adam(
             self.critic_local.parameters(),
             lr=LR_CRITIC,
             weight_decay=WEIGHT_DECAY)
 
-        self.__memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, 0)
+        self.__memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, random_seed+4)
 
         # Noise process
-        self.__noises = [_OUNoise(action_size, 0) for i in range(num_agents)]
+        self.__noises = [
+            _OUNoise(action_size, random_seed+i) for i in range(num_agents)
+        ]
 
 
     def reset(self):
@@ -158,7 +162,7 @@ def _soft_update(local_model, target_model, tau):
 class _OUNoise:
     """Ornstein-Uhlenbeck process."""
 
-    def __init__(self, size, seed, theta=0.15, sigma=0.2):
+    def __init__(self, size, seed, theta=0.15, sigma=0.3):
         """Initialize parameters and noise process."""
 
         self.state = np.zeros(size)

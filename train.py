@@ -11,21 +11,18 @@ def main():
 
     env, agent = create_env_agent()
 
-    env.train(agent, 100, 5000)
+    env.train(agent, 200, 5000)
 
-    if np.all(env.max_mean_scores > 30.0):
+    if env.max_mean_score > 30.0:
 
         print(
             "Saving actor.pth and critic.pth with score",
-            env.max_mean_scores)
+            env.max_mean_score)
 
         torch.save(agent.actor_local.state_dict(), "actor.pth")
         torch.save(agent.critic_local.state_dict(), "critic.pth")
     else:
-
-        print(
-            "Some of the scores are below 30.0, not saved",
-            env.max_mean_scores)
+        print("Average score is below 30.0, not saved", env.max_mean_score)
 
     fig = plt.figure()
     fig.add_subplot(111)
