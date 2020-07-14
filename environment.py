@@ -93,31 +93,27 @@ class EnvBase(ABC):
         raise NotImplementedError
 
 
-    def train(self, agent, max_t, n_episodes):
+    def train(self, agent, n_episodes):
         """Train agent by running num_agent environments for n_episodes. The
         training algorithm will pick the best results over 100-episode window
         and re-store it in agent.actor_local and agent.critic_local
         :param agent: Agent, implementing neural networks and training
         algorithms
-        :param max_t: Maximum number of steps per episode if it is not finished
-        earlier
         :param n_episodes: Number of episodes for training
         """
-        self.__run(True, agent, max_t, n_episodes)
+        self.__run(True, agent, n_episodes)
 
 
-    def test(self, agent, max_t, n_episodes):
+    def test(self, agent, n_episodes):
         """ Test agent by running num_agent environments for n_episodes.
         :param agent: Agent, implementing neural networks and training
         algorithms
-        :param max_t: Maximum number of steps per episode if it is not finished
-        earlier
         :param n_episodes: Number of episodes for training
         """
-        self.__run(False, agent, max_t, n_episodes)
+        self.__run(False, agent, n_episodes)
 
 
-    def __run(self, train_mode, agent, max_t, n_episodes):
+    def __run(self, train_mode, agent, n_episodes):
 
         self.__total_scores = []
         self.__max_mean_score = 0.0
@@ -133,7 +129,7 @@ class EnvBase(ABC):
 
             scores.fill(0)
 
-            for _ in range(max_t):
+            while True:
                 actions = agent.act(states, train_mode)
 
                 info = self._step(actions)

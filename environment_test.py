@@ -167,7 +167,7 @@ class TestEnvironment(unittest.TestCase):
 
         env = EnvPlane(3, 5.0, 0.0, self.__on_reset_test)
         agent = AgentOnPlane(1.0, env.action_size, env.state_size)
-        env.test(agent, 5, 2)
+        env.test(agent, 2)
 
         self.assertFalse(env.train_mode)
         self.assertIsNotNone(env.train_mode)
@@ -180,7 +180,7 @@ class TestEnvironment(unittest.TestCase):
 
         env = EnvPlane(2, 0.0, 5.0, self.__on_reset_train)
         agent = AgentOnPlane(0.5, env.action_size, env.state_size)
-        env.train(agent, 10, 3)
+        env.train(agent, 3)
 
         self.assertTrue(env.train_mode)
         self.assertEqual(10 * 3, len(agent.steps))
