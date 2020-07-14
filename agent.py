@@ -30,6 +30,8 @@ class Agent:
 
         random_seed = 5
 
+        self.__step_counter = 0
+
         self.actor_local = Actor(state_size, action_size, random_seed)
         self.__actor_target = Actor(state_size, action_size, random_seed+1)
 
@@ -70,8 +72,10 @@ class Agent:
         # Save experiences / rewards
         self.__memory.add(states, actions, env_info)
 
+        self.__step_counter += 1
+
         # Learn, if enough samples are available in memory
-        if len(self.__memory) > BATCH_SIZE:
+        if len(self.__memory) > BATCH_SIZE and 0 == self.__step_counter % 2:
             experiences = self.__memory.sample()
             self.__learn(experiences, GAMMA)
 
@@ -126,6 +130,7 @@ class Agent:
         # Minimize the loss
         self.__critic_optimizer.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1)
         self.__critic_optimizer.step()
 
         # Update actor
