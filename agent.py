@@ -9,13 +9,16 @@ from replay_buffer import ReplayBuffer, DEVICE
 from neural_nets import Actor, Critic
 
 
-BUFFER_SIZE = int(50)   # replay buffer size
+BUFFER_SIZE = int(40)   # replay buffer size
 BATCH_SIZE = 20         # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor
 LR_CRITIC = 3e-4        # learning rate of the critic
 WEIGHT_DECAY = 0.0001   # L2 weight decay
+EPS_START = 1.0         # Initial noise scalar multiplier
+EPS_END = 0.01          # Final noise scalar multiplier
+EPS_DECAY = 0.99995     # Noise exponential rate
 
 
 class Agent:
@@ -31,17 +34,24 @@ class Agent:
         random_seed = 5
 
         self.__step_counter = 0
+        self.__eps = EPS_START
 
-        self.actor_local = Actor(state_size, action_size, random_seed)
-        self.__actor_target = Actor(state_size, action_size, random_seed+1)
+        self.actor_local = Actor(
+            state_size, action_size, random_seed).to(DEVICE)
+
+        self.__actor_target = Actor(
+            state_size, action_size, random_seed+1).to(DEVICE)
 
         self.__actor_optimizer = optim.Adam(
             self.actor_local.parameters(),
             lr=LR_ACTOR)
 
 
-        self.critic_local = Critic(state_size, action_size, random_seed+2)
-        self.__critic_target = Critic(state_size, action_size, random_seed+3)
+        self.critic_local = Critic(
+            state_size, action_size, random_seed+2).to(DEVICE)
+
+        self.__critic_target = Critic(
+            state_size, action_size, random_seed+3).to(DEVICE)
 
         self.__critic_optimizer = optim.Adam(
             self.critic_local.parameters(),
@@ -98,7 +108,9 @@ class Agent:
 
         if add_noise:
             for action, noise in zip(actions, self.__noises):
-                action += noise.sample()
+                action += self.__eps * noise.sample()
+
+            self.__eps = max(EPS_END, EPS_DECAY * self.__eps)
 
         return np.clip(actions, -1.0, 1.0)
 
