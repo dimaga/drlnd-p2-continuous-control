@@ -25,12 +25,12 @@ class Actor(nn.Module):
         """
         super(Actor, self).__init__()
 
-        fc_units = 64
+        fc_units = 256
 
         self.seed = torch.manual_seed(seed)
         self.fc1 = nn.Linear(state_size, fc_units)
-        self.fc2 = nn.Linear(fc_units, fc_units)
-        self.fc3 = nn.Linear(fc_units, action_size)
+        self.batch_norm1 = nn.BatchNorm1d(fc_units)
+        self.fc2 = nn.Linear(fc_units, action_size)
         self.__reset_parameters()
 
 
@@ -39,15 +39,13 @@ class Actor(nn.Module):
 
         # pylint: disable=arguments-differ
 
-        state = F.relu(self.fc1(state))
-        state = F.relu(self.fc2(state))
-        return F.tanh(self.fc3(state))
+        state = F.relu(self.batch_norm1(self.fc1(state)))
+        return F.tanh(self.fc2(state))
 
 
     def __reset_parameters(self):
         self.fc1.weight.data.uniform_(*_hidden_init(self.fc1))
-        self.fc2.weight.data.uniform_(*_hidden_init(self.fc2))
-        self.fc3.weight.data.uniform_(-3e-3, 3e-3)
+        self.fc2.weight.data.uniform_(-3e-3, 3e-3)
 
 
 class Critic(nn.Module):
@@ -66,14 +64,13 @@ class Critic(nn.Module):
         fcs1_units = 256
         fc2_units = 256
         fc3_units = 128
-        fc4_units = 64
 
         self.seed = torch.manual_seed(seed)
         self.fcs1 = nn.Linear(state_size, fcs1_units)
         self.fc2 = nn.Linear(fcs1_units + action_size, fc2_units)
+        self.batch_norm2 = nn.BatchNorm1d(fc2_units)
         self.fc3 = nn.Linear(fc2_units, fc3_units)
-        self.fc4 = nn.Linear(fc3_units, fc4_units)
-        self.fc5 = nn.Linear(fc4_units, 1)
+        self.fc4 = nn.Linear(fc3_units, 1)
         self.__reset_parameters()
 
 
@@ -85,15 +82,13 @@ class Critic(nn.Module):
 
         state = F.leaky_relu(self.fcs1(state))
         data = torch.cat((state, action), dim=1)
-        data = F.leaky_relu(self.fc2(data))
+        data = F.leaky_relu(self.batch_norm2(self.fc2(data)))
         data = F.leaky_relu(self.fc3(data))
-        data = F.leaky_relu(self.fc4(data))
-        return self.fc5(data)
+        return self.fc4(data)
 
 
     def __reset_parameters(self):
         self.fcs1.weight.data.uniform_(*_hidden_init(self.fcs1))
         self.fc2.weight.data.uniform_(*_hidden_init(self.fc2))
         self.fc3.weight.data.uniform_(*_hidden_init(self.fc3))
-        self.fc4.weight.data.uniform_(*_hidden_init(self.fc4))
-        self.fc5.weight.data.uniform_(-3e-3, 3e-3)
+        self.fc4.weight.data.uniform_(-3e-3, 3e-3)

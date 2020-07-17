@@ -9,8 +9,8 @@ from replay_buffer import ReplayBuffer, DEVICE
 from neural_nets import Actor, Critic
 
 
-BUFFER_SIZE = int(40)   # replay buffer size
-BATCH_SIZE = 20         # minibatch size
+BUFFER_SIZE = int(1e6)  # replay buffer size
+BATCH_SIZE = 128        # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor
