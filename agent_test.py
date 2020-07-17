@@ -4,7 +4,6 @@
 import unittest
 import numpy as np
 from agent import Agent, OUNoise
-from environment import InfoStub
 
 
 class TestAgent(unittest.TestCase):
@@ -25,55 +24,6 @@ class TestAgent(unittest.TestCase):
 
         actions3 = agent.act(states, True)
         self.assertFalse(np.allclose(actions2, actions3))
-
-
-    def test_agent_step(self):
-        """Train the agent to approach a goal in 1D world. state[0] is agent
-        position, state[1] is a goal position, action[0] is a displacement
-        of an agent to the goal"""
-
-        state_size = 2
-        action_size = 1
-        environments = 20
-
-        agent = Agent(state_size, action_size, environments)
-        np.random.seed(0)
-
-        at_least_one_reached = False
-        n_episodes = 150
-
-        for episode in range(n_episodes):
-
-            states = np.random.random((environments, state_size))
-
-            at_least_one_reached = False
-
-            agent.reset()
-
-            for _ in range(10):
-                train_step = episode < n_episodes - 1
-                actions = agent.act(states, train_step)
-
-                info = InfoStub()
-                info.vector_observations = states.copy()
-                info.vector_observations[:, 0] += actions.reshape(-1)
-
-                info.rewards = np.exp(-np.abs(
-                    info.vector_observations[:, 0]
-                    - info.vector_observations[:, 1]))
-
-                info.local_done = info.rewards > 0.999
-
-                if train_step:
-                    agent.step(states, actions, info)
-
-                if np.any(info.local_done):
-                    at_least_one_reached = True
-                    break
-
-                states = info.vector_observations
-
-        self.assertTrue(at_least_one_reached)
 
 
 class TestQUNoise(unittest.TestCase):
