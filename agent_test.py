@@ -3,7 +3,7 @@
 
 import unittest
 import numpy as np
-from agent import Agent
+from agent import Agent, OUNoise
 from environment import InfoStub
 
 
@@ -74,6 +74,19 @@ class TestAgent(unittest.TestCase):
                 states = info.vector_observations
 
         self.assertTrue(at_least_one_reached)
+
+
+class TestQUNoise(unittest.TestCase):
+    """Test QUNoise"""
+
+    def test_sample(self):
+        """Test how an agent can act"""
+
+        noise = OUNoise(2, 0)
+
+        sample = noise.sample()
+        self.assertEqual((2,), sample.shape)
+        self.assertNotAlmostEqual(sample[0], sample[1])
 
 
 

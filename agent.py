@@ -62,7 +62,7 @@ class Agent:
 
         # Noise process
         self.__noises = [
-            _OUNoise(action_size, random_seed+i) for i in range(num_agents)
+            OUNoise(action_size, random_seed+i) for i in range(num_agents)
         ]
 
 
@@ -176,10 +176,10 @@ def _soft_update(local_model, target_model, tau):
 
 
 
-class _OUNoise:
+class OUNoise:
     """Ornstein-Uhlenbeck process."""
 
-    def __init__(self, size, seed, theta=0.15, sigma=0.3):
+    def __init__(self, size, seed, theta=0.15, sigma=0.2):
         """Initialize parameters and noise process."""
 
         self.state = np.zeros(size)
@@ -198,7 +198,10 @@ class _OUNoise:
         """Update internal state and return it as a noise sample."""
 
         state = self.state
-        dstate = self.theta * (-state) + self.sigma * np.random.randn()
+
+        dstate = self.theta * (-state) + self.sigma * np.random.randn(
+            *state.shape)
+
         self.state = state + dstate
 
         return self.state
