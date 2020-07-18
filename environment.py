@@ -140,7 +140,7 @@ class EnvBase(ABC):
                 scores += info.rewards
                 states = info.vector_observations
 
-                episode_finished = np.any(info.local_done)
+                episode_finished = info.local_done
                 if np.any(episode_finished):
                     break
 
