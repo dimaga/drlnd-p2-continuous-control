@@ -1,6 +1,8 @@
 # Project 2: Continuous Control
 ### Project Details
 
+![Trained_Agents](trained_agents.png)
+
 This is my solution to Continuous Control Project of Udacity Deep Reinforcement
 Learning course. Original project template is available at
 https://github.com/udacity/deep-reinforcement-learning/tree/master/p2_continuous-control
