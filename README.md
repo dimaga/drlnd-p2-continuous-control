@@ -52,6 +52,8 @@ The project has been developed and tested on Mac OS Catalina with a CPU version 
 ### Instructions
 
 1. Download the project to your PC
+1. Open __environment.py__ in your text editor and set a correct path to Reacher
+simulator with 20 agents in ```ENV_PATH``` variable
 1. Open your terminal, cd to the project folder
 1. Run __test.py__ to test previously trained agent over 100 episodes
 1. Run __train.py__ to retrain the agent 
