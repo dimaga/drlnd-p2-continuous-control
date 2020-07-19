@@ -13,9 +13,6 @@ BUFFER_SIZE = int(1e6)  # replay buffer size
 BATCH_SIZE = 128        # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 1e-4         # learning rate of the actor
-LR_CRITIC = 3e-4        # learning rate of the critic
-WEIGHT_DECAY = 0.0001   # L2 weight decay
 EPS_START = 1.0         # Initial noise scalar multiplier
 EPS_END = 0.01          # Final noise scalar multiplier
 EPS_DECAY = 0.99995     # Noise exponential rate
@@ -43,8 +40,7 @@ class Agent:
             state_size, action_size, random_seed+1).to(DEVICE)
 
         self.__actor_optimizer = optim.Adam(
-            self.actor_local.parameters(),
-            lr=LR_ACTOR)
+            self.actor_local.parameters())
 
 
         self.critic_local = Critic(
@@ -54,9 +50,7 @@ class Agent:
             state_size, action_size, random_seed+3).to(DEVICE)
 
         self.__critic_optimizer = optim.Adam(
-            self.critic_local.parameters(),
-            lr=LR_CRITIC,
-            weight_decay=WEIGHT_DECAY)
+            self.critic_local.parameters())
 
         self.__memory = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE, random_seed+4)
 
