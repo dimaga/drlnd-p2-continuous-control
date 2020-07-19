@@ -155,9 +155,8 @@ class Agent:
         self.__actor_optimizer.step()
 
         # Update target networks
-        if 0 == self.__step_counter % 20:
-            _soft_update(self.critic_local, self.__critic_target, TAU)
-            _soft_update(self.actor_local, self.__actor_target, TAU)
+        _soft_update(self.critic_local, self.__critic_target, TAU)
+        _soft_update(self.actor_local, self.__actor_target, TAU)
 
 
 def _soft_update(local_model, target_model, tau):
